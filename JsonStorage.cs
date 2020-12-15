@@ -15,7 +15,7 @@ namespace LisaBot
         /// <param name="path">File path</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        private static T RestoreObject<T>(string path)
+        public T RestoreObject<T>(string path)
         {
             var json = File.ReadAllText(path);
             return JsonConvert.DeserializeObject<T>(json);

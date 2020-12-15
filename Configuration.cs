@@ -2,7 +2,7 @@
 
 namespace LisaBot
 {
-    public struct ConfigJson
+    public struct Configuration
     {
         [JsonProperty("token")]
         public string Token { get; set; }
