@@ -8,7 +8,22 @@ namespace LisaBot.Modules.Guides
         public string Title { get; set; }
         [JsonProperty("list")]
         public Guide[] List { get; set; }
-        
+
+        public override string ToString()
+        {
+            var builder = new System.Text.StringBuilder();
+            builder.AppendLine($"Title: {Title}");
+
+            builder.Append("List: \n");
+
+            foreach (Guide guide in List)
+            {
+                builder.AppendLine(guide.ToString());
+            }
+
+            return builder.ToString();
+        }
+
     }
     public class Guide
     {
@@ -16,6 +31,11 @@ namespace LisaBot.Modules.Guides
         public string Title { get; set; }
         [JsonProperty("info")]
         public Info Info { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Title}, {Info.ToString()}";
+        }
     }
 
     public class Info
@@ -28,5 +48,10 @@ namespace LisaBot.Modules.Guides
         public bool Premium { get; set; }
         [JsonProperty("earlyAccess")]
         public bool EarlyAccess { get; set; }
+
+        public override string ToString()
+        {
+            return $"Link: {Link}, desc: {Description}, premium: {Premium}, early? {EarlyAccess}";
+        }
     }
 }
