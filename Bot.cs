@@ -13,41 +13,45 @@ using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
 using DSharpPlus.CommandsNext.Exceptions;
 using System.Collections.Generic;
+using VkNet;
+using VkNet.Model;
+using Newtonsoft.Json.Linq;
 
 namespace LisaBot
 {
     class Bot
     {
-        internal static EventId BotInventId { get; } = new EventId(83, "LisaBot");
+        private const string DiscordConfigPath = "discordConfig.json";
+        private const string VkConfigPath = "vkConfig.json";
 
         public const string BotName = "LisaBot";
+        internal static EventId BotInventId { get; } = new EventId(83, BotName);
         public DiscordClient Client { get; private set; }
         public InteractivityExtension Interactivity { get; private set; }
         public CommandsNextExtension Commands { get; private set; }
 
+        public static VkApi Vk { get; private set; }
+
         public async Task RunAsync()
         {
-            var json = string.Empty;
-
             Setup();
 
-            using (var fs = File.OpenRead("config.json"))
-            {
-                using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
-                {
-                    json = await sr.ReadToEndAsync().ConfigureAwait(false);
-                }
-            }
-
-            var configJson = JsonConvert.DeserializeObject<Configuration>(json);
+            var discordConfig = await JsonStorage.RestoreObjectAsync<Configuration.DiscordConfiguration>(DiscordConfigPath);
+            var vkConfig = await JsonStorage.RestoreObjectAsync<Configuration.DiscordConfiguration>(VkConfigPath);
 
             var config = new DiscordConfiguration
             {
-                Token = configJson.Token,
+                Token = discordConfig.Token,
                 TokenType = TokenType.Bot,
                 AutoReconnect = true,
                 MinimumLogLevel = LogLevel.Debug
             };
+
+            Vk = new VkApi();
+            Vk.Authorize(new ApiAuthParams
+            {
+                AccessToken = vkConfig.Token
+            });
 
             Client = new DiscordClient(config);
             Client.Ready += OnClientReady;
@@ -58,7 +62,7 @@ namespace LisaBot
 
             var commandsConfig = new CommandsNextConfiguration
             {
-                StringPrefixes = new string[] { configJson.Prefix },
+                StringPrefixes = new string[] { discordConfig.Prefix },
                 EnableMentionPrefix = true,
                 EnableDms = true,
                 CaseSensitive = false
@@ -77,14 +81,35 @@ namespace LisaBot
 
         private void Setup()
         {
-            if (!File.Exists("config.json"))
+            if (!File.Exists(DiscordConfigPath))
             {
-                var obj = new Configuration();
-                Console.WriteLine("Set token:");
-                obj.Token = Console.ReadLine();
-                Console.WriteLine("Set prefix:");
-                obj.Prefix = Console.ReadLine();
-                new JsonStorage().StoreObject(obj, $@"{Directory.GetCurrentDirectory()}\config.json");
+                var cfg = new Configuration.DiscordConfiguration()
+                {
+                    Name = string.Empty,
+                    Token = string.Empty,
+                    Prefix = string.Empty
+                };
+                JsonStorage.StoreObject(cfg, DiscordConfigPath);
+
+                foreach (var property in JObject.Parse(JsonConvert.SerializeObject(cfg)))
+                {
+                    Console.WriteLine($"Set Discord {property.Key}:");
+                    JsonStorage.SetValue(DiscordConfigPath, property.Key, Console.ReadLine());
+                }
+            }
+            if (!File.Exists(VkConfigPath))
+            {
+                var cfg = new Configuration.VkConfiguration()
+                {
+                    Token = string.Empty,
+                };
+                JsonStorage.StoreObject(cfg, VkConfigPath);
+
+                foreach (var property in JObject.Parse(JsonConvert.SerializeObject(cfg)))
+                {
+                    Console.WriteLine($"Set VK {property.Key}:");
+                    JsonStorage.SetValue(VkConfigPath, property.Key, Console.ReadLine());
+                }
             }
         }
 
@@ -123,12 +148,6 @@ namespace LisaBot
                     .AddField("Message", ex.Message);
                 await e.Context.RespondAsync(embed: embed.Build());
             }
-        }
-
-        private Task ONCommandExecuted(CommandsNextExtension cnext, CommandExecutionEventArgs e)
-        {
-            e.Context.Client.Logger.LogInformation(BotInventId, "User {0} executed '{1}' in {2}", e.Context.User.Username, e.Command.QualifiedName, e.Context.Channel.Name);
-            return Task.CompletedTask;
         }
 
         private async Task OnMessageCreated(DiscordClient sender, MessageCreateEventArgs e)
