@@ -40,7 +40,7 @@ namespace LisaBot
             Setup();
 
             var discordConfig = await JsonStorage.RestoreObjectAsync<Configuration.DiscordConfiguration>(DiscordConfigPath);
-            var vkConfig = await JsonStorage.RestoreObjectAsync<Configuration.DiscordConfiguration>(VkConfigPath);
+            var vkConfig = await JsonStorage.RestoreObjectAsync<Configuration.VkConfiguration>(VkConfigPath);
 
             var config = new DiscordConfiguration
             {
