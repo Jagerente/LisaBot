@@ -10,10 +10,11 @@ namespace LisaBot.Extensions
     {
         public static async Task<DiscordEmoji> GetByName(this DiscordGuild guild, string name)
         {
-            return (await guild.GetEmojisAsync()).Where(x => x.Name == name).FirstOrDefault();
+            IReadOnlyList<DiscordGuildEmoji> emojis = await guild.GetEmojisAsync();
+            return emojis.FirstOrDefault(emoji => emoji.Name == name);
         }
 
-        public static DiscordEmbedBuilder GABuilder()
+        public static DiscordEmbedBuilder CreateGenshinAcademyEmbedBuilder()
         {
             var embed = new DiscordEmbedBuilder();
 

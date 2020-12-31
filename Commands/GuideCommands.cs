@@ -13,74 +13,88 @@ using VkNet;
 using VkNet.Model.Attachments;
 using VkNet.Model.RequestParams;
 
+using Microsoft.EntityFrameworkCore;
+
+using LisaBot.Models.Guides;
+using LisaBot.Database;
+
 namespace LisaBot.Commands
 {
+    [ModuleLifespan(ModuleLifespan.Transient)]
     public class GuideCommands : BaseCommandModule
     {
+        //Sets by DependencyInjection
+        public LisaBotContext dbContext { private get; set; }
+
         [Command("guides")]
         public async Task Embed(CommandContext ctx)
         {
-            var guides = File.ReadAllText("guides.json");
+            IList<Guide> allGuides = await dbContext.Guides
+                .Include(g => g.Category)
+                .ToListAsync();
 
-            var cats = JsonConvert.DeserializeObject<Modules.Guides.Category[]>(guides);
-            foreach (var cat in cats)
+            foreach (Guide guide in allGuides)
             {
-                foreach (var guide in cat.List)
+                var embed = GuildExtensions.CreateGenshinAcademyEmbedBuilder();
+                embed.Author = new DiscordEmbedBuilder.EmbedAuthor
                 {
-                    var embed = GuildExtensions.GABuilder();
-                    embed.Author = new DiscordEmbedBuilder.EmbedAuthor
-                    {
-                        Name = cat.Title,
-                        IconUrl = ctx.User.AvatarUrl,
-                        Url = "https://vk.com/page-200500476_56853211"
-                    };
-                    embed.Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail
-                    {
-                        Url = "https://sun9-22.userapi.com/impg/dEbY3uoAMVf_VHk-6AIFt5miCKL_PVqYXxkEMg/66TGyOGkN0c.jpg?size=520x520&quality=96&proxy=1&sign=6390eee094afef6d9682db5ad1c48cca&type=album"
-                    };
-                    embed.Title = guide.Title;
-                    embed.Description = guide.Info.Description;
-                    embed.Url = guide.Info.Link;
-                    embed.Color = DiscordColor.Cyan;
-                    embed.Build();
+                    Name = guide.Category.Title,
+                    IconUrl = ctx.User.AvatarUrl,
+                    Url = "https://vk.com/page-200500476_56853211"
+                };
+                embed.Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail
+                {
+                    Url = "https://sun9-22.userapi.com/impg/dEbY3uoAMVf_VHk-6AIFt5miCKL_PVqYXxkEMg/66TGyOGkN0c.jpg?size=520x520&quality=96&proxy=1&sign=6390eee094afef6d9682db5ad1c48cca&type=album"
+                };
+                embed.Title = guide.Title;
+                embed.Description = guide.Information.Description;
+                embed.Url = guide.Information.Link;
+                embed.Color = DiscordColor.Cyan;
+                embed.Build();
 
-                    await ctx.Channel.SendMessageAsync(embed: embed).ConfigureAwait(false);
-                }
+                await ctx.Channel.SendMessageAsync(embed: embed).ConfigureAwait(false);
             }
         }
 
-        //[Command("test")]
-        //public async Task Test(CommandContext ctx)
-        //{
-        //    var guides = File.ReadAllText("guides.json");
+        [Command("test")]
+        public async Task Test(CommandContext ctx)
+        {
+            IList<Category> cats = await dbContext.Categories
+                .Include(c => c.Guides)
+                .ToListAsync();
 
-        //    var cats = JsonConvert.DeserializeObject<Modules.Guides.Category[]>(guides);
-
-        //    foreach (var cat in cats)
-        //    {
-        //        var a = new DiscordEmbedBuilder
-        //        {
-        //            Author = new DiscordEmbedBuilder.EmbedAuthor
-        //            {
-        //                Name = "Гайды",
-        //                IconUrl = "https://emoji.gg/assets/emoji/9893_Books1.png",
-        //                Url = "https://vk.com/page-200500476_56853211"
-        //            },
-        //            Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail
-        //            {
-        //                Url = "https://sun9-22.userapi.com/impg/dEbY3uoAMVf_VHk-6AIFt5miCKL_PVqYXxkEMg/66TGyOGkN0c.jpg?size=520x520&quality=96&proxy=1&sign=6390eee094afef6d9682db5ad1c48cca&type=album"
-        //            },
-        //        };
-        //        var str  = string.Empty;
-        //        foreach (var guide in cat.List)
-        //        {
-        //            str += guide.Info.Premium ? await ctx.Guild.GetByName("donut") : string.Empty;
-        //            str += $"[{guide.Title}]({guide.Info.Link})\n";
-        //        }
-        //        a.AddField($"{cat.Title}", str, true);
-        //        await ctx.Channel.SendMessageAsync(embed: a.Build()).ConfigureAwait(false);
-        //    }
-        //}
+            foreach (Category cat in cats)
+            {
+                var builder = new DiscordEmbedBuilder
+                {
+                    Author = new DiscordEmbedBuilder.EmbedAuthor
+                    {
+                        Name = "Гайды",
+                        IconUrl = "https://emoji.gg/assets/emoji/9893_Books1.png",
+                        Url = "https://vk.com/page-200500476_56853211"
+                    },
+                    Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail
+                    {
+                        Url = "https://sun9-22.userapi.com/impg/dEbY3uoAMVf_VHk-6AIFt5miCKL_PVqYXxkEMg/66TGyOGkN0c.jpg?size=520x520&quality=96&proxy=1&sign=6390eee094afef6d9682db5ad1c48cca&type=album"
+                    },
+                };
+                var str = string.Empty;
+                try
+                {
+                    foreach (Guide guide in cat.Guides)
+                    {
+                        str += guide.Information.IsPremium ? await ctx.Guild.GetByName("donut") : string.Empty;
+                        str += $"[{guide.Title}]({guide.Information.Link})\n";
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("here");
+                }
+                builder.AddField($"{cat.Title}", str, true);
+                await ctx.Channel.SendMessageAsync(embed: builder.Build()).ConfigureAwait(false);
+            }
+        }
 
         [Command("paimon")]
         public async Task Paimon(CommandContext ctx)
@@ -112,7 +126,7 @@ namespace LisaBot.Commands
 
             try
             {
-                var embed = GuildExtensions.GABuilder();
+                var embed = GuildExtensions.CreateGenshinAcademyEmbedBuilder();
                 embed.Author = new DiscordEmbedBuilder.EmbedAuthor
                 {
                     Name = "Библиотека билдов",

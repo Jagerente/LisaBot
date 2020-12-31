@@ -7,14 +7,15 @@ namespace LisaBot.Commands
 {
     public class OtherCommands : BaseCommandModule
     {
+        public Random rnd { private get; set; }
+
         [Command("roll")]
         [Description("Rolls a number.")]
         public async Task Roll(CommandContext ctx, [Description("Range min-max.")] string range = "0-100")
         {
-            var a = new Random();
             var min = Convert.ToInt32(range.Split('-')[0]);
             var max = Convert.ToInt32(range.Split('-')[1]);
-            await ctx.Channel.SendMessageAsync(a.Next(min, max).ToString());
+            await ctx.Channel.SendMessageAsync(rnd.Next(min, max).ToString());
         }
 
         [Command("roll")]
