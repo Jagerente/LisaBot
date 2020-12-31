@@ -10,12 +10,15 @@ using Newtonsoft.Json;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Entities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using DSharpPlus.CommandsNext.Exceptions;
 using System.Collections.Generic;
 using VkNet;
 using VkNet.Model;
 using Newtonsoft.Json.Linq;
+
+using LisaBot.Database;
 
 namespace LisaBot
 {
@@ -65,7 +68,8 @@ namespace LisaBot
                 StringPrefixes = new string[] { discordConfig.Prefix },
                 EnableMentionPrefix = true,
                 EnableDms = true,
-                CaseSensitive = false
+                CaseSensitive = false,
+                Services = GetServiceProvider()
             };
             Commands = Client.UseCommandsNext(commandsConfig);
             Commands.CommandErrored += OnCommandErrored;
@@ -166,6 +170,17 @@ namespace LisaBot
         {
             Console.WriteLine($"{BotName} is ready");
             await Task.CompletedTask;
+        }
+
+        //Initializing services here
+        private IServiceProvider GetServiceProvider()
+        {
+            var collection = new ServiceCollection();
+
+            collection.AddSingleton<Random>();
+            collection.AddTransient<LisaBotContext>();
+
+            return collection.BuildServiceProvider();
         }
     }
 }
