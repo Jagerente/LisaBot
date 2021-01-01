@@ -8,14 +8,14 @@ using LisaBot.Models;
 
 namespace LisaBot.Database.Configuration
 {
-    public class TagConfiguration : IEntityTypeConfiguration<Tag>
-    {
-        public void Configure(EntityTypeBuilder<Tag> builder)
-        {
-            builder.ToTable("Tags");
+    //public class TagConfiguration : IEntityTypeConfiguration<Tag>
+    //{
+    //    public void Configure(EntityTypeBuilder<Tag> builder)
+    //    {
+    //        builder.ToTable("Tags");
 
-            builder
-                .HasKey(t => t.Id);
-        }
-    }
+    //        builder
+    //            .HasKey(t => t.Id);
+    //    }
+    //}
 }

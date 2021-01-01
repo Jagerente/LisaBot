@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LisaBot.Models.Guides
 {
@@ -13,7 +14,20 @@ namespace LisaBot.Models.Guides
 
         [JsonProperty("list")]
         public IList<Guide> Guides { get; set; }
+        //[JsonIgnore]
+        //public IList<TagCategory> CategoryTags { get; set; }
+
         [JsonIgnore]
-        public IList<Tag> Tags { get; set; }
+        public string TagString { get; set; }
+
+        [JsonIgnore]
+        [NotMapped]
+        public string[] Tags
+        {
+            get
+            {
+                return TagString.Split('/');
+            }
+        }
     }
 }

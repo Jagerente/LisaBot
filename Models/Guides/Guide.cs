@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
 
 namespace LisaBot.Models.Guides
@@ -20,7 +17,21 @@ namespace LisaBot.Models.Guides
 
         [JsonProperty("info")]
         public GuideInfo Information { get; set; }
+
         [JsonIgnore]
-        public IList<Tag> Tags { get; set; }
+        public string TagString { get; set; }
+
+        [JsonIgnore]
+        [NotMapped]
+        public string[] Tags
+        {
+            get
+            {
+                return TagString.Split('/');
+            }
+        }
+
+        //[JsonIgnore]
+        //public IList<TagGuide> GuideTags { get; set; }
     }
 }

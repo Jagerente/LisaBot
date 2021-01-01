@@ -22,8 +22,7 @@ namespace LisaBot.Commands
         [Description("Rolls a number.")]
         public async Task Roll(CommandContext ctx, [Description("Maximum number.")]int max = 100)
         {
-            var a = new Random();
-            await ctx.Channel.SendMessageAsync(a.Next(max).ToString());
+            await ctx.Channel.SendMessageAsync(rnd.Next(max).ToString());
         }
 
 

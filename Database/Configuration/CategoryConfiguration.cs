@@ -13,6 +13,7 @@ namespace LisaBot.Database.Configuration
 
             builder.HasKey(c => c.Id);
             builder.Property(c => c.Title).IsRequired();
+            builder.Property(c => c.TagString).HasMaxLength(100);
 
             builder
                 .HasMany(c => c.Guides)

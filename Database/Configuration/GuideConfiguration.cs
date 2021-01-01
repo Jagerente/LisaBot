@@ -14,6 +14,7 @@ namespace LisaBot.Database.Configuration
             builder.HasKey(g => g.Id);
             builder.Property(g => g.Title).IsRequired();
             //builder.HasIndex(g => g.Title);
+            builder.Property(g => g.TagString).HasMaxLength(100);
 
             var ownedBuilder = builder.OwnsOne(g => g.Information);
 
