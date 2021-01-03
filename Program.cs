@@ -16,18 +16,14 @@ namespace LisaBot
     {
         static void Main(string[] args)
         {
-
-
 #if DEBUG
             DoDebug();
 #else
-
             var bot = new Bot();
-                bot.RunAsync().GetAwaiter().GetResult();
+            bot.RunAsync().GetAwaiter().GetResult();
 #endif
 
         }
-
 
         static void DoDebug()
         {

@@ -3,9 +3,11 @@ using DSharpPlus.EventArgs;
 using DSharpPlus.CommandsNext;
 using LisaBot.Commands;
 using System;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
@@ -66,7 +68,7 @@ namespace LisaBot
             var commandsConfig = new CommandsNextConfiguration
             {
                 StringPrefixes = new string[] { discordConfig.Prefix },
-                EnableMentionPrefix = true,
+                EnableMentionPrefix = false,
                 EnableDms = true,
                 CaseSensitive = false,
                 Services = GetServiceProvider()
@@ -76,7 +78,6 @@ namespace LisaBot
             Commands.CommandExecuted += OnCommandExecuted;
             Commands.RegisterCommands<OtherCommands>();
             Commands.RegisterCommands<GuideCommands>();
-
 
             await Client.ConnectAsync(new DiscordActivity("Genshin Impact", ActivityType.Playing));
 
@@ -157,6 +158,32 @@ namespace LisaBot
         private async Task OnMessageCreated(DiscordClient sender, MessageCreateEventArgs e)
         {
             Console.WriteLine($"{e.Guild.Name}/#{e.Channel.Name.TrimStart("Channel".ToCharArray())}/{e.Author.Username}: {e.Message.Content}");
+
+            bool check = e.Message.MentionedUsers.Contains(Client.CurrentUser);
+
+            if (check)
+            {
+                string tag = e.Message.Content.Split(' ')[1].ToLower();
+
+                using (var context = new LisaBotContext())
+                {
+                    var categories = context.Categories
+                        .Include(c => c.Guides)
+                        .Where(c => c.TagString != null && c.TagString.Contains(tag))
+                        .ToList();
+
+
+                    foreach (var category in categories)
+                    {
+                        var bld = new StringBuilder();
+                        bld.Append($"Category name: {category.Title}, Guides count: {category.Guides.Count}, {category.TagString}");
+
+                        await e.Channel.SendMessageAsync(bld.ToString());
+                    }
+
+                }
+            }
+
             await Task.CompletedTask;
         }
 
