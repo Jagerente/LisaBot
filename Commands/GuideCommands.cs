@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 
 using LisaBot.Models.Guides;
 using LisaBot.Database;
+using System.Text;
 
 namespace LisaBot.Commands
 {
@@ -118,33 +119,38 @@ namespace LisaBot.Commands
             var builds = new Dictionary<string, string>();
             foreach (var photo in photos)
             {
-                foreach (var tag in photo.Text.Split("/"))
+                foreach (var tag in photo.Text.Split("\n")[0].Split("/"))
                 {
                     builds.Add(tag.ToLower(), photo.Sizes[photo.Sizes.Count - 1].Url.ToString());
                 }
             }
 
+            var embed = GuildExtensions.CreateGenshinAcademyEmbedBuilder();
+            embed.Author = new DiscordEmbedBuilder.EmbedAuthor
+            {
+                Name = "Библиотека билдов",
+                IconUrl = "https://emoji.gg/assets/emoji/9893_Books1.png",
+                Url = "https://vk.com/album-200500476_277817193"
+            };
+
             try
             {
-                var embed = GuildExtensions.CreateGenshinAcademyEmbedBuilder();
-                embed.Author = new DiscordEmbedBuilder.EmbedAuthor
-                {
-                    Name = "Библиотека билдов",
-                    IconUrl = "https://emoji.gg/assets/emoji/9893_Books1.png",
-                    Url = "https://vk.com/album-200500476_277817193"
-                };
                 embed.ImageUrl = builds[character];
-                embed.Build();
 
-                await ctx.Channel.SendMessageAsync(embed: embed).ConfigureAwait(false);
+                await ctx.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
             }
             catch
             {
-                await ctx.Channel.SendMessageAsync("Доступные билды:");
-                foreach (var build in builds)
+                embed.Description = "Доступные билды:\n";
+                var k = 0;
+                StringBuilder tags = new StringBuilder();
+                foreach (var tag in builds)
                 {
-                    await ctx.Channel.SendMessageAsync(build.Key);
+                    tags.Append(tag.Key + (k % 2 == 0 ? "/" : "\n"));
+                    k++;
                 }
+                embed.Description += tags.ToString();
+                await ctx.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
             }
 
         }
