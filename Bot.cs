@@ -27,6 +27,7 @@ namespace LisaBot
     class Bot
     {
         private const string DiscordConfigPath = "discordConfig.json";
+        private const string DbConfigPath = "dbConfig.json";
         private const string VkConfigPath = "vkConfig.json";
 
         public const string BotName = "LisaBot";
@@ -34,6 +35,8 @@ namespace LisaBot
         public DiscordClient Client { get; private set; }
         public InteractivityExtension Interactivity { get; private set; }
         public CommandsNextExtension Commands { get; private set; }
+
+        public static Configuration.DbConfiguration DbConfig;
 
         public static VkApi Vk { get; private set; }
 
@@ -43,6 +46,7 @@ namespace LisaBot
 
             var discordConfig = await JsonStorage.RestoreObjectAsync<Configuration.DiscordConfiguration>(DiscordConfigPath);
             var vkConfig = await JsonStorage.RestoreObjectAsync<Configuration.VkConfiguration>(VkConfigPath);
+            DbConfig = await JsonStorage.RestoreObjectAsync<Configuration.DbConfiguration>(DbConfigPath);
 
             var config = new DiscordConfiguration
             {
@@ -102,6 +106,25 @@ namespace LisaBot
                     JsonStorage.SetValue(DiscordConfigPath, property.Key, Console.ReadLine());
                 }
             }
+            if (!File.Exists(DbConfigPath))
+            {
+                DbConfig = new Configuration.DbConfiguration()
+                {
+                    Host = string.Empty,
+                    Port = string.Empty,
+                    Database = string.Empty,
+                    Username = string.Empty,
+                    Password = string.Empty
+                };
+                JsonStorage.StoreObject(DbConfig, DiscordConfigPath);
+
+                foreach (var property in JObject.Parse(JsonConvert.SerializeObject(DbConfig)))
+                {
+                    Console.WriteLine($"Set Discord {property.Key}:");
+                    JsonStorage.SetValue(DiscordConfigPath, property.Key, Console.ReadLine());
+                }
+            }
+
             if (!File.Exists(VkConfigPath))
             {
                 var cfg = new Configuration.VkConfiguration()
